@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NABD MAX V7 - High-Performance Engine</title>
+    <style>
+        :root {
+            --bg-main: #06090e;
+            --card-bg: #111823;
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #1e293b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 12px;
+            direction: rtl;
+        }
+
+        header {
+            text-align: center;
+            padding: 15px 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            color: var(--accent-cyan);
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            background-color: #1e293b;
+            color: var(--text-secondary);
+        }
+
+        .badge.active {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        canvas {
+            width: 100%;
+            height: 200px;
+            background-color: #090d14;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: block;
+        }
+
+        .control-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        input {
+            background-color: #090d14;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 8px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        .logs-box {
+            background-color: #070a0f;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            height: 100px;
+            overflow-y: auto;
+            margin-top: 8px;
+        }
+
+        .stat-val {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>NABD MAX V7</h1>
+        <div class="subtitle">محرك التحليل والمخاطر عالي السرعة (محلي بالكامل)</div>
+    </header>
+
+    <div class="grid-container">
+        
+        <!-- بطاقة الرسم البياني والمحرك الرسومي -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">محرك الرسوميات (GPU Engine)</span>
+                <span id="gpuStatus" class="badge">جاري الفحص...</span>
+            </div>
+            <canvas id="mainCanvas"></canvas>
+            <button class="btn" onclick="NabdCore.triggerRender()">تحديث معالجة البيانات</button>
+        </div>
+
+        <!-- بطاقة إدارة المخاطر -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">حاسبة حجم الصفحات والمخاطرة</span>
+                <span class="badge active">أداء أوفلاين</span>
+            </div>
+            <div class="control-group">
+                <div class="input-box">
+                    <label>رأس المال ($)</label>
+                    <input type="number" id="capital" value="10000">
+                </div>
+                <div class="input-box">
+                    <label>نسبة المخاطرة (%)</label>
+                    <input type="number" id="riskPercent" value="1" step="0.1">
+                </div>
+                <div class="input-box">
+                    <label>وقف الخسارة (نقاط/سنت)</label>
+                    <input type="number" id="stopLoss" value="50">
+                </div>
+                <div class="input-box">
+                    <label>حجم العقد الموصى به</label>
+                    <div id="positionSize" class="stat-val">0.00</div>
+                </div>
+            </div>
+            <button class="btn" onclick="NabdCore.calculateRisk()">احسب المخاطرة</button>
+        </div>
+
+        <!-- بطاقة التخزين المحلي والمعالجة الموازية -->
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">قاعدة البيانات ومعالج خلفية الـ Worker</span>
+                <span id="dbStatus" class="badge">IndexedDB</span>
+            </div>
+            <button class="btn" onclick="NabdCore.runWorkerTask()">تشغيل اختبار المحاكاة (Worker Task)</button>
+            <div class="logs-box" id="logs">
+                > جاهز للتنفيذ المحلي...<br>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const NabdCore = (() => {
+            let db = null;
+            let worker = null;
+
+            const log = (msg) => {
+                const logsEl = document.getElementById('logs');
+                logsEl.innerHTML += `> ${msg}<br>`;
+                logsEl.scrollTop = logsEl.scrollHeight;
+            };
+
+            // 1. تهيئة قاعدة البيانات المحلية IndexedDB
+            const initDB = () => {
+                const request = indexedDB.open('NABD_MAX_V7_DB', 1);
+                request.onupgradeneeded = (e) => {
+                    db = e.target.result;
+                    if (!db.objectStoreNames.contains('ticks')) {
+                        db.createObjectStore('ticks', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    log('تم فتح قاعدة البيانات IndexedDB بنجاح.');
+                };
+                request.onerror = () => log('تعذر فتح قاعدة البيانات المحلية.');
+            };
+
+            // 2. إنشاء Worker داخلي عبر Inline Blob لملاءمة نظام iOS
+            const initWorker = () => {
+                const workerCode = `
+                    self.onmessage = function(e) {
+                        let result = 0;
+                        for (let i = 0; i < 5000000; i++) {
+                            result += Math.sqrt(i) * Math.sin(i);
+                        }
+                        self.postMessage({ status: 'complete', val: result.toFixed(2) });
+                    };
+                `;
+                const blob = new Blob([workerCode], { type: 'application/javascript' });
+                worker = new Worker(URL.createObjectURL(blob));
+                
+                worker.onmessage = (e) => {
+                    log(`اكتملت عملية المعالجة الموازية: ${e.data.val}`);
+                };
+            };
+
+            // 3. محرك الرسوميات للرسوم البيانية
+            const triggerRender = () => {
+                const canvas = document.getElementById('mainCanvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // رسم شبكة خلفية
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 1;
+                for(let x = 0; x < canvas.width; x += 30) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+                }
+                for(let y = 0; y < canvas.height; y += 30) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+                }
+
+                // رسم منحنى خطي تفاعلي
+                ctx.strokeStyle = '#00f2fe';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                for (let x = 0; x < canvas.width; x += 5) {
+                    const y = Math.sin((x + Date.now() * 0.05) * 0.02) * 35 + (canvas.height / 2);
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                log('تمت إعادة رسم المؤشر الرسومي بنجاح.');
+            };
+
+            // 4. خوارزمية إدارة المخاطر وحجم العقد
+            const calculateRisk = () => {
+                const capital = parseFloat(document.getElementById('capital').value) || 0;
+                const riskPercent = parseFloat(document.getElementById('riskPercent').value) || 0;
+                const stopLoss = parseFloat(document.getElementById('stopLoss').value) || 1;
+
+                const riskAmount = capital * (riskPercent / 100);
+                const positionSize = riskAmount / stopLoss;
+
+                document.getElementById('positionSize').textContent = positionSize.toFixed(2);
+                log(`حساب المخاطرة: المبلغ المخاطر $${riskAmount.toFixed(2)} | حجم العقد: ${positionSize.toFixed(2)}`);
+            };
+
+            // 5. تشغيل معالجة الـ Worker
+            const runWorkerTask = () => {
+                if (worker) {
+                    log('بدء حسابات معقدة في الخلفية عبر Web Worker...');
+                    worker.postMessage('start');
+                }
+            };
+
+            // التهيئة عند تحميل الصفحة
+            window.addEventListener('DOMContentLoaded', () => {
+                initDB();
+                initWorker();
+                triggerRender();
+                calculateRisk();
+
+                // فحص WebGPU
+                const gpuBadge = document.getElementById('gpuStatus');
+                if ('gpu' in navigator) {
+                    gpuBadge.textContent = 'WebGPU مدعوم';
+                    gpuBadge.classList.add('active');
+                } else {
+                    gpuBadge.textContent = 'Canvas 2D Engine';
+                }
+            });
+
+            return {
+                triggerRender,
+                calculateRisk,
+                runWorkerTask
+            };
+        })();
+    </script>
+</body>
+</html>
